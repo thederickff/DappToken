@@ -24,4 +24,27 @@ contract('DappToken', accounts => {
 
     assert.equal(balance, 1000000);
   });
+
+  it('transfers token ownership', async () => {
+    const instance = await DappToken.deployed();
+
+    try {
+      await instance.transfer(accounts[1], 99999999);
+    } catch (error) {
+      assert(error.message.includes('revert'));
+    }
+
+    const result = await instance.transfer.call(accounts[1], 250000);
+    assert.equal(result, true);
+    const receipt = await instance.transfer(accounts[1], 250000);
+    assert.equal(receipt.logs[0].event, 'Transfer');
+    assert.equal(receipt.logs[0].args._from, accounts[0]);
+    assert.equal(receipt.logs[0].args._to, accounts[1]);
+    assert.equal(receipt.logs[0].args._value, 250000);
+
+    const balance1 = await instance.balanceOf(accounts[1]);
+    assert.equal(balance1, 250000)
+    const balance0 = await instance.balanceOf(accounts[0]);
+    assert.equal(balance0, 750000)
+  })
 });
